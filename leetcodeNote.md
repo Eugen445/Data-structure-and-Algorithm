@@ -265,3 +265,216 @@ public:
 };
 ```
 
+#### [160. 相交链表](https://leetcode-cn.com/problems/intersection-of-two-linked-lists/)
+
+```
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+//错误示例
+// class Solution {
+// public:
+//     ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+//         //前提是能相交的情况下
+//         ListNode *curA = headA;
+//         ListNode *curB = headB;
+//         while (curA && curB) {
+//             if (curA == curB) return curA;
+//             curA = curA->next;
+//             curB = curB->next;
+//             if (!curA) curA = headB;
+//             if (!curB) curB = headA;
+//         }
+//         //这样写如果不相交的话就无法终止了
+//         return {};
+//     }
+// };
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+        //这道题思路很简单,就是把自己的链表遍历完,然后转到另一个链表如果有公共节点就会相交,因为两个链表的总长是一定的
+        //而相交后的链表长度也是一定的,所以到达相交节点的路程是相等的
+        //当然也有可能不用跳转到另一个链表之前就相遇的情况
+        ListNode *curA = headA;
+        ListNode *curB = headB;
+        while (curA != curB) { //这样就可以解决死循环的问题
+            //这个是最简洁的写法
+            // curA = curA ? curA->next : headB;
+            // curB = curB ? curB->next : headA;
+
+            //错误写法
+            // if (!curA) curA = headB;
+            // if (!curB) curB = headA;
+            // curA = curA->next;
+            // curB = curB->next;
+
+            //另一种正确写法
+            if (!curA) curA = headB;
+            else curA = curA->next;
+            if (!curB) curB = headA;
+            else curB = curB->next;
+            
+        }
+        return curA;
+    }
+};
+//哈希法-在这道题上发挥不算很好
+class Solution {
+public:
+    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+        unordered_map <ListNode*, int> umap;
+        ListNode *curA = headA; //尽量不改变原链表
+        while (curA != nullptr) {
+            ++umap[curA];
+            //umap.insert(pair<ListNode*,int> (curA, 1)); //可行
+            curA = curA->next;
+        }
+        ListNode *curB = headB;
+        while (curB != nullptr) {
+            if (umap[curB]) return curB;
+            curB = curB->next;
+        }
+        return nullptr;
+    }
+};
+```
+
+#### [剑指 Offer 03. 数组中重复的数字](https://leetcode-cn.com/problems/shu-zu-zhong-zhong-fu-de-shu-zi-lcof/)
+
+```
+//第一种先排序再使用双指针的思想
+class Solution {
+public:
+    int findRepeatNumber(vector<int>& nums) { O(nlogn)
+        sort(nums.begin(), nums.end());
+        for (int i = 0; i < nums.size() - 1; ++i) {
+            if (nums[i] == nums[i + 1]) {
+                return nums[i];
+            }
+        }
+        return {};
+    }
+};
+//第二种使用哈希
+//效率极其垃圾
+class Solution {
+public:
+    int findRepeatNumber(vector<int>& nums) {
+        unordered_map <int, int> umap;
+        for (int i = 0; i < nums.size(); ++i) {
+            ++umap[nums[i]];
+        }
+        for (int i = 0; i < nums.size(); ++i) {
+            if (umap[nums[i]] > 1) {
+                return nums[i];
+            }
+        }
+        return {}; //这个没有用
+    }
+};
+//第三种原地交换法
+class Solution {
+public:
+    int findRepeatNumber(vector<int>& nums) {
+        for (int i = 0; i < nums.size(); ++i) {
+            if (nums[i] == i) continue;
+            if (nums[nums[i]] == nums[i]) return nums[i];
+            swap (nums[nums[i]], nums[i]);
+        }
+        return {};
+    }
+};
+
+```
+
+#### [88. 合并两个有序数组](https://leetcode-cn.com/problems/merge-sorted-array/)
+
+```
+//逆向双指针
+class Solution {
+public:
+    void merge(vector<int>& nums1, int m, vector<int>& nums2, int n) {
+        int s1 = m - 1;
+        int s2 = n - 1;
+        int pos = m + n - 1;
+        //while (s1 || s2) { //这个地方这样写是错的 //错误示例 [1] 1 [] 0 //这样的话s2起始就是负的，在while循环中非0就是true
+        while (s1 >= 0 || s2 >= 0) {
+            //这样写也是错误的,因为if判断后没有终止，依旧往下走，而s1和s2可能为负，访问负数下标错误
+            // if (s1 < 0) nums1[pos--] = nums2[s2--];
+            // if (s2 < 0) nums1[pos--] = nums1[s1--];
+            // if (nums1[s1] < nums2[s2])
+            //     nums1[pos--] = nums2[s2--];
+            // else nums1[pos--] = nums1[s1--];
+            if (s1 < 0) nums1[pos--] = nums2[s2--];
+            else if (s2 < 0) nums1[pos--] = nums1[s1--];
+            else if (nums1[s1] < nums2[s2]) nums1[pos--] = nums2[s2--];
+            else nums1[pos--] = nums1[s1--];
+        }
+    }
+};
+//合并再sort //次选方案
+class Solution {
+public:
+    void merge(vector<int>& nums1, int m, vector<int>& nums2, int n) {
+        for (int i = 0; i != n; ++i) {
+            nums1[m + i] = nums2[i];
+        }
+        sort(nums1.begin(),nums1.end());
+    }
+};
+```
+
+#### [69. x 的平方根](https://leetcode-cn.com/problems/sqrtx/)
+
+二分法我推荐看这个https://leetcode-cn.com/problems/search-insert-position/solution/te-bie-hao-yong-de-er-fen-cha-fa-fa-mo-ban-python-/十分详细地讲解了二分法
+
+```
+//暴力法-不到万不得已不用
+class Solution {
+public:
+    int mySqrt(int x) {
+        if (x == 0) return 0;
+        if (x == 1) return 1;
+        if (x == 4) return 2;
+        for (long i = 1; i <= x/2; ++i) {
+            if (i * i == x) return i;
+            else if (i * i < x && (i + 1) * (i + 1) > x) return i;
+        }
+        return {};
+    }
+};
+//二分法
+class Solution {
+public:
+    int mySqrt(int x) {
+        if (x == 0) return 0;
+        if (x == 1) return 1;
+        if (x == 4) return 2;
+        int left = 1;
+        int right = x;
+        while (right > left) {
+            int mid = (right - left + 1) / 2 + left;
+            //if (mid * mid > x ) //这样会超出整形范围，原因已知，在乘法中x是int范围，但x-1 * x- 1之类的会超
+            if (mid > x / mid) {
+                right = mid - 1;
+            }
+            else left = mid;
+        }
+        return left;
+    }
+};
+```
+
